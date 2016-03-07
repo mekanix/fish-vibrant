@@ -17,7 +17,7 @@
 * Prompt character turns red if the last command didn't exit with 0.
 * Command execution time will be displayed if it exceeds 5 seconds.
 * Username and host only displayed when in an SSH or sudo session.
-* Shows the current path in the title and the current folder & command when a process is running.
+* Shows the current path in the title.
 
 
 ## License
