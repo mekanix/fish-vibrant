@@ -18,7 +18,7 @@
 #                               Defaults to 10 seconds.
 #
 # PURE_PROMPT_SYMBOL            Defines the prompt symbol. The default value is ❯.
-#                       
+#
 # PURE_GIT_UP_ARROW             Defines the git up arrow symbol. The default value is ⇡.
 #
 # PURE_GIT_DOWN_ARROW           Defines the git down arrow symbol. The default value is ⇣.
@@ -46,9 +46,7 @@ function _pure_git_fetch_allowed
 end;
 
 
-function _pure_timestamp
-    command date +%s
-end
+function _vibrant_timestamp; command date +%s; end
 
 
 function _pure_cmd_max_exec_time;           _pure_get_var PURE_CMD_MAX_EXEC_TIME 5; end;
@@ -62,31 +60,21 @@ function _pure_git_dirty_check_interval;    _pure_get_var PURE_GIT_DIRTY_CHECK_I
 
 function _pure_cmd_duration
     set -l duration 0
-    if [ $CMD_DURATION ]
-        set duration $CMD_DURATION
-    end
+    if [ $CMD_DURATION ]; set duration $CMD_DURATION; end
 
     set full_seconds (math "$duration / 1000")
     set second_parts (math "$duration % 1000 / 10")
-    set seconds (math "$full_seconds % 60")
-    set minutes (math "$full_seconds / 60 % 60")
-    set hours (math "$full_seconds / 60 / 60 % 24")
-    set days (math "$full_seconds / 60/ 60 /24")
-  
-    if [ $days -gt 0 ]
-        echo -n -s $days "d "
-    end
+    set seconds      (math "$full_seconds % 60")
+    set minutes      (math "$full_seconds / 60 % 60")
+    set hours        (math "$full_seconds / 60 / 60 % 24")
+    set days         (math "$full_seconds / 60/ 60 /24")
 
-    if [ $hours -gt 0 ]
-        echo -n -s $hours "h "
-    end
-
-    if [ $minutes -gt 0 ]
-        echo -n -s $minutes "m "
-    end
+    if [ $days -gt 0 ];    echo -ns $days 'd ';    end
+    if [ $hours -gt 0 ];   echo -ns $hours 'h ';   end
+    if [ $minutes -gt 0 ]; echo -ns $minutes 'm '; end
 
     if [ $full_seconds -ge (_pure_cmd_max_exec_time) ]
-        echo -s $seconds.$second_parts "s"
+        echo -s $seconds.$second_parts 's'
     end
 end
 
@@ -96,9 +84,7 @@ function unique_async_job
     set -l callback_function $argv[2]
     set -l cmd $argv[3]
 
-    if set -q $job_unique_flag
-        return 0
-    end
+    if set -q $job_unique_flag; return 0; end
 
     set -g $job_unique_flag
     set -l async_job_result _async_job_result_(random)
@@ -116,16 +102,11 @@ end
 
 
 function _pure_async_git_fetch
-    if not _pure_git_fetch_allowed
-        return 0
-    end
+    if not _pure_git_fetch_allowed; return 0; end
+    if set -q _pure_git_async_fetch_running; return 0; end
 
-    if set -q _pure_git_async_fetch_running
-        return 0
-    end
-  
     set -l working_tree $argv[1]
-    
+
     pushd $working_tree
     if [ ! (command git rev-parse --abbrev-ref @'{u}' ^ /dev/null) ]
         popd
@@ -144,10 +125,7 @@ function _pure_async_git_fetch
         end
     end
 
-    if [ $git_fetch_required = no ]
-        popd
-        return 0
-    end
+    if [ $git_fetch_required = no ]; popd; return 0; end
 
     set -l cmd "env GIT_TERMINAL_PROMPT=0 command git -c gc.auto=0 fetch > /dev/null ^ /dev/null"
     unique_async_job "_pure_async_git_fetch_running" "kill -WINCH %self" $cmd
@@ -158,7 +136,7 @@ end
 
 function _pure_git_arrows
     set -l working_tree $argv[1]
-    
+
     pushd $working_tree
     if [ ! (command git rev-parse --abbrev-ref @'{u}' ^ /dev/null) ]
         popd
@@ -183,7 +161,7 @@ function _pure_git_arrows
     if [ $right -gt 0 ]
         set arrows $arrows(_pure_git_down_arrow)
     end
-  
+
     echo $arrows
 end
 
@@ -199,7 +177,7 @@ function _pure_git_info
     if not set -q _pure_git_last_dirty_check_timestamp
         set -g _pure_git_last_dirty_check_timestamp 0
     end
-  
+
     set -l working_tree $argv[1]
     set -l current_timestamp (_pure_timestamp)
     set -l time_since_last_dirty_check (math "$current_timestamp - $_pure_git_last_dirty_check_timestamp")
@@ -215,13 +193,13 @@ function _pure_git_info
 
     if test -n $git_branch_name
         set -l git_dirty_mark
-        
+
         if set -q _pure_git_dirty_files_count
             if test $_pure_git_dirty_files_count -gt 0
                 set git_dirty_mark "*"
             end
         end
-        echo -n -s $git_branch_name $git_dirty_mark
+        echo -ns $git_branch_name $git_dirty_mark
     end
 end
 
@@ -233,16 +211,14 @@ function _pure_update_git_last_pwd
         return 0
     end
 
-    if [ $_pure_git_last_pwd = $working_tree ]
-        return 0
-    end
- 
+    if [ $_pure_git_last_pwd = $working_tree ]; return 0; end
+
     # Reset git dirty state on directory change
     set -g _pure_git_last_pwd $working_tree
     set -e _pure_git_dirty_files_count
     set -e _pure_git_last_dirty_check_timestamp
 
-    # Mask any failed staruses of set calls
+    # Mask any failed statuses of set calls
     return 0
 end
 
@@ -250,39 +226,34 @@ end
 function fish_prompt
     set last_status $status
 
-    set -l cyan (set_color cyan)
-    set -l yellow (set_color yellow)
-    set -l red (set_color red)
-    set -l blue (set_color blue)
-    set -l green (set_color green)
-    set -l normal (set_color normal)
+    set -l cyan    (set_color cyan)
+    set -l yellow  (set_color yellow)
+    set -l red     (set_color red)
+    set -l blue    (set_color blue)
+    set -l green   (set_color green)
+    set -l normal  (set_color normal)
     set -l magenta (set_color magenta)
-    set -l white (set_color white)
-    set -l gray (set_color 666)
+    set -l white   (set_color white)
+    set -l gray    (set_color 666)
 
     set -l cwd $blue(pwd | sed "s:^$HOME:~:")
 
     # Output the prompt, left to right
 
-    # Add a newline before new prompts
-    echo -e ''
+    echo -e '' # Add a newline before new prompts
 
     # Display username and hostname if logged in as root, in sudo or ssh session
     set -l uid (id -u)
 
     if [ \( $uid -eq 0 -o $SUDO_USER \) -o $SSH_CONNECTION ]
-        echo -n -s $white $USER $gray "@" (command hostname | command cut -f 1 -d ".") " " $normal
+        echo -ns $white $USER $gray '@' (command hostname | command cut -f 1 -d '.') ' ' $normal
     end
 
-    # Print pwd or full path
-    echo -n -s $cwd $normal
+    echo -ns $cwd $normal # Print pwd or full path
 
     # Print last command duration
     set -l cmd_duration (_pure_cmd_duration)
-
-    if [ $cmd_duration ]
-        echo -n -s $yellow " " $cmd_duration $normal
-    end
+    if [ $cmd_duration ]; echo -ns $yellow ' ' $cmd_duration $normal; end
 
     set -l git_working_tree (command git rev-parse --show-toplevel ^/dev/null)
 
@@ -290,31 +261,23 @@ function fish_prompt
     if [ $git_working_tree ]
         _pure_update_git_last_pwd $git_working_tree
         set -l git_info (_pure_git_info $git_working_tree)
-        if [ $git_info ]
-            echo -n -s $gray " " $git_info $normal
-        end
+        if [ $git_info ]; echo -ns $gray ' ' $git_info $normal; end
 
         set -l git_arrows (_pure_git_arrows $git_working_tree)
-        if [ $git_arrows ]
-            echo -n -s $cyan " " $git_arrows $normal
-        end
+        if [ $git_arrows ]; echo -ns $cyan ' ' $git_arrows $normal; end
 
         _pure_async_git_fetch $git_working_tree
         if set -q _pure_async_git_fetch_running
-            echo -n -s $yellow " " (_pure_git_fetch_indicator) $normal
+            echo -ns $yellow ' ' (_pure_git_fetch_indicator) $normal
         end
     end
 
-    # Redraw tail of prompt on winch
-    echo -n -s "          "
+    echo -ns '          ' # Redraw tail of prompt on winch
 
     set prompt_color $magenta
-    if [ $last_status != 0 ]
-        set prompt_color $red
-    end
+    if [ $last_status != 0 ]; set prompt_color $red; end
 
     # Terminate with a nice prompt char
     echo -e ''
-    echo -e -n -s $prompt_color (_pure_prompt_symbol) " " $normal
+    echo -ens $prompt_color (_pure_prompt_symbol) ' ' $normal
 end
-
