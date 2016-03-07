@@ -4,58 +4,9 @@
 # by Jannis R
 # MIT License
 # -----------------------
-# Configuration variables
-#
-# VIBRANT_CMD_MAX_EXEC_TIME        The max execution time of a process before its run time is shown
-#                                  when it exits. Defaults to 5 seconds.
-#
-# VIBRANT_GIT_FETCH                Set VIBRANT_GIT_FETCH=0 to prevent Vibrant from checking whether
-#                                  the current Git remote has been updated.
-#
-# VIBRANT_GIT_FETCH_INTERVAL       Interval to check current Git remote for changes.
-#                                  Defaults to 1800 seconds.
-# VIBRANT_GIT_DIRTY_CHECK_INTERVAL Interval to check current Git remote for changes.
-#                                  Defaults to 10 seconds.
-#
-# VIBRANT_PROMPT_SYMBOL            Defines the prompt symbol. The default value is ❯.
-#
-# VIBRANT_GIT_UP_ARROW             Defines the git up arrow symbol. The default value is ⇡.
-#
-# VIBRANT_GIT_DOWN_ARROW           Defines the git down arrow symbol. The default value is ⇣.
-#
-# VIBRANT_GIT_FETCH_INDICATOR      Defines the git fetch proxess indicator symbol.
-#                                  The default value is ⇣.
-#
-
-
-function _vibrant_get_var
-    set -l var_name $argv[1]
-    set -l var_default_value $argv[2]
-    if not set -q $var_name
-        set -U $var_name $var_default_value
-    end
-    echo $$var_name
-end
-
-
-function _vibrant_git_fetch_allowed
-    if [ (_vibrant_get_var VIBRANT_GIT_FETCH 1) = 0 ]
-        return 1
-    end
-    return 0
-end;
 
 
 function _vibrant_timestamp; command date +%s; end
-
-
-function _vibrant_cmd_max_exec_time;           _vibrant_get_var VIBRANT_CMD_MAX_EXEC_TIME 5; end;
-function _vibrant_prompt_symbol;               _vibrant_get_var VIBRANT_PROMPT_SYMBOL "❯"; end;
-function _vibrant_git_up_arrow;                _vibrant_get_var VIBRANT_GIT_UP_ARROW "⇡"; end;
-function _vibrant_git_down_arrow;              _vibrant_get_var VIBRANT_GIT_DOWN_ARROW "⇣"; end;
-function _vibrant_git_fetch_indicator;         _vibrant_get_var VIBRANT_GIT_FETCH_INDICATOR "⇣"; end;
-function _vibrant_git_fetch_interval;          _vibrant_get_var VIBRANT_GIT_FETCH_INTERVAL 1800; end;
-function _vibrant_git_dirty_check_interval;    _vibrant_get_var VIBRANT_GIT_DIRTY_CHECK_INTERVAL 10; end;
 
 
 function _vibrant_cmd_duration
@@ -73,7 +24,7 @@ function _vibrant_cmd_duration
     if [ $hours -gt 0 ];   echo -ns $hours 'h ';   end
     if [ $minutes -gt 0 ]; echo -ns $minutes 'm '; end
 
-    if [ $full_seconds -ge (_vibrant_cmd_max_exec_time) ]
+    if [ $full_seconds -ge 5 ]
         echo -s $seconds.$second_parts 's'
     end
 end
@@ -102,7 +53,6 @@ end
 
 
 function _vibrant_async_git_fetch
-    if not _vibrant_git_fetch_allowed; return 0; end
     if set -q _vibrant_git_async_fetch_running; return 0; end
 
     set -l working_tree $argv[1]
@@ -120,7 +70,7 @@ function _vibrant_async_git_fetch
         set -l last_fetch_timestamp (command stat -f "%m" .git/FETCH_HEAD)
         set -l current_timestamp (_vibrant_timestamp)
         set -l time_since_last_fetch (math "$current_timestamp - $last_fetch_timestamp")
-        if [ $time_since_last_fetch -gt (_vibrant_git_fetch_interval) ]
+        if [ $time_since_last_fetch -gt 1800 ]
             set git_fetch_required yes
         end
     end
@@ -148,21 +98,11 @@ function _vibrant_git_arrows
 
     popd
 
-    if [ $left -eq 0 -a $right -eq 0 ]
-        return 0
-    end
+    if [ $left -eq 0 -a $right -eq 0 ]; return 0; end
 
-    set -l arrows ""
-
-    if [ $left -gt 0 ]
-        set arrows $arrows(_vibrant_git_up_arrow)
-    end
-
-    if [ $right -gt 0 ]
-        set arrows $arrows(_vibrant_git_down_arrow)
-    end
-
-    echo $arrows
+    if [ $left -gt 0 ];  echo -n '⇡'; end
+    if [ $right -gt 0 ]; echo -n '⇣'; end
+    echo -en "\n"
 end
 
 
@@ -183,7 +123,7 @@ function _vibrant_git_info
     set -l time_since_last_dirty_check (math "$current_timestamp - $_vibrant_git_last_dirty_check_timestamp")
 
     pushd $working_tree
-    if [ $time_since_last_dirty_check -gt (_vibrant_git_dirty_check_interval) ]
+    if [ $time_since_last_dirty_check -gt 10 ]
         set -l cmd "command git status -unormal --porcelain --ignore-submodules ^/dev/null | wc -l"
         unique_async_job "_vibrant_async_git_dirty_check_running" _vibrant_dirty_mark_completion $cmd
     end
@@ -268,7 +208,7 @@ function fish_prompt
 
         _vibrant_async_git_fetch $git_working_tree
         if set -q _vibrant_async_git_fetch_running
-            echo -ns $yellow ' ' (_vibrant_git_fetch_indicator) $normal
+            echo -ns $yellow ' ⇣' $normal
         end
     end
 
@@ -279,5 +219,5 @@ function fish_prompt
 
     # Terminate with a nice prompt char
     echo -e ''
-    echo -ens $prompt_color (_vibrant_prompt_symbol) ' ' $normal
+    echo -ens $prompt_color '❯ ' $normal
 end
