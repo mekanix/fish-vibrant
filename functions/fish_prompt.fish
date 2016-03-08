@@ -5,30 +5,7 @@
 # MIT License
 # -----------------------
 
-
 function _vibrant_timestamp; command date +%s; end
-
-
-function _vibrant_cmd_duration
-    set -l duration 0
-    if [ $CMD_DURATION ]; set duration $CMD_DURATION; end
-
-    set full_seconds (math "$duration / 1000")
-    set second_parts (math "$duration % 1000 / 10")
-    set seconds      (math "$full_seconds % 60")
-    set minutes      (math "$full_seconds / 60 % 60")
-    set hours        (math "$full_seconds / 60 / 60 % 24")
-    set days         (math "$full_seconds / 60/ 60 /24")
-
-    if [ $days -gt 0 ];    echo -ns $days 'd ';    end
-    if [ $hours -gt 0 ];   echo -ns $hours 'h ';   end
-    if [ $minutes -gt 0 ]; echo -ns $minutes 'm '; end
-
-    if [ $full_seconds -ge 5 ]
-        echo -s $seconds.$second_parts 's'
-    end
-end
-
 
 function unique_async_job
     set -l job_unique_flag $argv[1]
@@ -50,7 +27,6 @@ function unique_async_job
         set -e $async_job_result
     end
 end
-
 
 function _vibrant_async_git_fetch
     if set -q _vibrant_git_async_fetch_running; return 0; end
@@ -84,7 +60,8 @@ function _vibrant_async_git_fetch
 end
 
 
-function _vibrant_git_arrows
+
+function _vibrant_git_remote_info
     set -l working_tree $argv[1]
 
     pushd $working_tree
@@ -99,11 +76,11 @@ function _vibrant_git_arrows
     popd
 
     if [ $left -eq 0 -a $right -eq 0 ]; return 0; end
-
+    if [ $left -gt 0 -a $right -gt 0 ]; echo '⇵'; return 0; end
     if [ $left -gt 0 ];  echo -n '⇡'; end
     if [ $right -gt 0 ]; echo -n '⇣'; end
-    echo -en "\n"
 end
+
 
 
 function _vibrant_dirty_mark_completion
@@ -111,7 +88,6 @@ function _vibrant_dirty_mark_completion
     set -g _vibrant_git_dirty_files_count $argv[1]
     kill -WINCH %self
 end
-
 
 function _vibrant_git_info
     if not set -q _vibrant_git_last_dirty_check_timestamp
@@ -187,10 +163,6 @@ function fish_prompt
 
     echo -ns (pwd | sed "s:^$HOME:~:") # Print pwd or full path
 
-    # Print last command duration
-    set -l cmd_duration (_vibrant_cmd_duration)
-    if [ $cmd_duration ]; echo -ns $yellow ' ' $cmd_duration $normal; end
-
     set -l git_working_tree (command git rev-parse --show-toplevel ^/dev/null)
 
     # Show git branch an status
@@ -199,13 +171,8 @@ function fish_prompt
         set -l git_info (_vibrant_git_info $git_working_tree)
         if [ $git_info ]; echo -ns $blue ' ' $git_info $normal; end
 
-        set -l git_arrows (_vibrant_git_arrows $git_working_tree)
-        if [ $git_arrows ]; echo -ns $red ' ' $git_arrows $normal; end
-
-        _vibrant_async_git_fetch $git_working_tree
-        if set -q _vibrant_async_git_fetch_running
-            echo -ns $yellow ' ⇣' $normal
-        end
+        set -l git_arrows (_vibrant_git_remote_info $git_working_tree)
+        if [ $git_arrows ]; echo -ns $yellow ' ' $git_arrows $normal; end
     end
 
     #echo -ns '          ' # Redraw tail of prompt on winch
