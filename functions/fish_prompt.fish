@@ -1,185 +1,105 @@
-# name: Vibrant
-# -----------------------
-# Vibrant prompt for fish
-# by Jannis R
-# MIT License
-# -----------------------
+set -g _vbr_timestamp 0
+set -g _vbr_pwd       ''
+set -g _vbr_branch    '-'
+set -g _vbr_up        0
+set -g _vbr_down      0
+set -g _vbr_status    ''
 
-function _vibrant_timestamp; command date +%s; end
 
-function unique_async_job
-    set -l job_unique_flag $argv[1]
-    set -l callback_function $argv[2]
-    set -l cmd $argv[3]
 
-    if set -q $job_unique_flag; return 0; end
+set cyan    (set_color cyan)
+set yellow  (set_color yellow)
+set red     (set_color red)
+set blue    (set_color blue)
+set green   (set_color green)
+set normal  (set_color normal)
+set magenta (set_color magenta)
+set white   (set_color white)
+set gray    (set_color 666)
 
-    set -g $job_unique_flag
-    set -l async_job_result _async_job_result_(random)
 
-    fish -c "set -U $async_job_result (eval $cmd)" &
-    set -l pid (jobs -l -p)
 
-    function _async_job_$pid -p $pid -V pid -V async_job_result -V callback_function -V job_unique_flag
-        set -e $job_unique_flag
-        eval $callback_function $$async_job_result
-        functions -e _async_job_$pid
-        set -e $async_job_result
-    end
-end
+function _vbr_update # <repo>
+    set -l now (command date +%s)
+    set -l elapsed (math $now - $_vbr_timestamp)
 
-function _vibrant_async_git_fetch
-    if set -q _vibrant_git_async_fetch_running; return 0; end
-
-    set -l working_tree $argv[1]
-
-    pushd $working_tree
-    if [ ! (command git rev-parse --abbrev-ref @'{u}' ^ /dev/null) ]
-        popd
-    return 0
-    end
-
-    set -l git_fetch_required no
-    if [ ! -e .git/FETCH_HEAD ]
-        set git_fetch_required yes
-    else
-        set -l last_fetch_timestamp (command stat -f "%m" .git/FETCH_HEAD)
-        set -l current_timestamp (_vibrant_timestamp)
-        set -l time_since_last_fetch (math "$current_timestamp - $last_fetch_timestamp")
-        if [ $time_since_last_fetch -gt 1800 ]
-            set git_fetch_required yes
+    if test $_vbr_pwd != $argv[1] -o $elapsed -gt 5
+        set -g _vbr_pwd       $argv[1]
+        set -g _vbr_timestamp $now
+        pushd $argv[1]
+        set -g _vbr_branch (command git symbolic-ref HEAD ^/dev/null | sed -e 's|^refs/heads/||')
+        set -l remotes  (command git remote | wc -l | bc)
+        if test $remotes -gt 0
+            set -g _vbr_up     (command git rev-list --left-only --count HEAD...@'{u}' ^ /dev/null)
+            set -g _vbr_down   (command git rev-list --right-only --count HEAD...@'{u}' ^ /dev/null)
+        else
+            set -g _vbr_up 0
+            set -g _vbr_down 0
         end
-    end
-
-    if [ $git_fetch_required = no ]; popd; return 0; end
-
-    set -l cmd "env GIT_TERMINAL_PROMPT=0 command git -c gc.auto=0 fetch > /dev/null ^ /dev/null"
-    unique_async_job "_vibrant_async_git_fetch_running" "kill -WINCH %self" $cmd
-
-    popd
-end
-
-
-
-function _vibrant_git_remote_info
-    set -l working_tree $argv[1]
-
-    pushd $working_tree
-    if [ ! (command git rev-parse --abbrev-ref @'{u}' ^ /dev/null) ]
+        git status --porcelain --ignore-submodules 2> /dev/null | read -z _vbr_status
         popd
-        return 0
     end
 
-    set -l left (command git rev-list --left-only --count HEAD...@'{u}' ^ /dev/null)
-    set -l right (command git rev-list --right-only --count HEAD...@'{u}' ^ /dev/null)
-
-    popd
-
-    if [ $left -eq 0 -a $right -eq 0 ]; return 0; end
-    if [ $left -gt 0 -a $right -gt 0 ]; echo '⇵'; return 0; end
-    if [ $left -gt 0 ];  echo -n '⇡'; end
-    if [ $right -gt 0 ]; echo -n '⇣'; end
-end
-
-
-
-function _vibrant_dirty_mark_completion
-    set -g _vibrant_git_last_dirty_check_timestamp (_vibrant_timestamp)
-    set -g _vibrant_git_dirty_files_count $argv[1]
-    kill -WINCH %self
-end
-
-function _vibrant_git_info
-    if not set -q _vibrant_git_last_dirty_check_timestamp
-        set -g _vibrant_git_last_dirty_check_timestamp 0
-    end
-
-    set -l working_tree $argv[1]
-    set -l current_timestamp (_vibrant_timestamp)
-    set -l time_since_last_dirty_check (math "$current_timestamp - $_vibrant_git_last_dirty_check_timestamp")
-
-    pushd $working_tree
-    if [ $time_since_last_dirty_check -gt 10 ]
-        set -l cmd "command git status -unormal --porcelain --ignore-submodules ^/dev/null | wc -l"
-        unique_async_job "_vibrant_async_git_dirty_check_running" _vibrant_dirty_mark_completion $cmd
-    end
-
-    set -l git_branch_name (command git symbolic-ref HEAD ^/dev/null | sed -e 's|^refs/heads/||')
-    popd
-
-    if test -n $git_branch_name
-        set -l git_dirty_mark
-
-        if set -q _vibrant_git_dirty_files_count
-            if test $_vibrant_git_dirty_files_count -gt 0
-                set git_dirty_mark "*"
-            end
-        end
-        echo -ns $git_branch_name $git_dirty_mark
+    if test $_vbr_pwd != $argv[1] -o $elapsed -gt 600
+        pushd $argv[1]
+        git -c gc.auto=0 fetch > /dev/null ^ /dev/null &
+        popd
     end
 end
 
 
-function _vibrant_update_git_last_pwd
-    set -l working_tree $argv[1]
-    if not set -q _vibrant_git_last_pwd
-        set -g _vibrant_git_last_pwd $working_tree
-        return 0
-    end
 
-    if [ $_vibrant_git_last_pwd = $working_tree ]; return 0; end
-
-    # Reset git dirty state on directory change
-    set -g _vibrant_git_last_pwd $working_tree
-    set -e _vibrant_git_dirty_files_count
-    set -e _vibrant_git_last_dirty_check_timestamp
-
-    # Mask any failed statuses of set calls
-    return 0
-end
-
-
-function fish_prompt
-    set last_status $status
-
-    set -l cyan    (set_color cyan)
-    set -l yellow  (set_color yellow)
-    set -l red     (set_color red)
-    set -l blue    (set_color blue)
-    set -l green   (set_color green)
-    set -l normal  (set_color normal)
-    set -l magenta (set_color magenta)
-    set -l white   (set_color white)
-    set -l gray    (set_color 666)
-
-    # Output the prompt, left to right
-
-    echo -e '' # Add a newline before new prompts
-
+function _vbr_prompt_login
     # Display username and hostname if logged in as root, in sudo or ssh session
-    if [ \( (id -u) -eq 0 -o $SUDO_USER \) -o $SSH_CONNECTION ]
-        echo -ns $yellow $USER $gray '@' $cyan (command hostname | command cut -f 1 -d '.') ' ' $normal
+    if test \( (id -u) -eq 0 -o $SUDO_USER \) -o $SSH_CONNECTION
+        set -l host (command hostname | command cut -f 1 -d '.')
+        echo -ns $yellow $USER $gray '@' $cyan $host ' ' $normal
+    end
+end
+
+# Print pwd or full path
+function _vbr_prompt_path; echo -ns (pwd | sed "s:^$HOME:~:"); end
+
+# Print Git branch
+function _vbr_prompt_branch; echo -ns $blue ' ' $_vbr_branch $normal; end
+
+function _vbr_prompt_files
+    set untracked (echo $_vbr_status | grep '^\?'     | wc -l | bc)
+    set unstaged  (echo $_vbr_status | grep '^.[A-Z]' | wc -l | bc)
+    set staged    (echo $_vbr_status | grep '^[A-Z]'  | wc -l | bc)
+
+    echo -ns ' '
+    if test $untracked -gt 0; echo -ns $red    '*' $untracked $normal; end
+    if test $unstaged -gt 0;  echo -ns $red    '±' $unstaged $normal;  end
+    if test $staged -gt 0;    echo -ns $yellow '⇈' $staged $normal;    end
+end
+
+function _vbr_prompt_remote
+    if [ $_vbr_up -eq 0 -a $_vbr_down -eq 0 ]; return 0; end
+    echo -ns ' '
+    if [ $_vbr_up -gt 0 ];   echo -ns $yellow '⇡' $_vbr_up   $normal; end
+    if [ $_vbr_down -gt 0 ]; echo -ns $red    '⇣' $_vbr_down $normal; end
+end
+
+
+
+# [user host] <path> [branch [files]] <prompt>
+function fish_prompt
+    set -l _status $status
+
+    _vbr_prompt_login
+    _vbr_prompt_path
+
+    # Show git branch and status
+    set -l repo (command git rev-parse --show-toplevel ^/dev/null)
+    if [ $repo ]
+        _vbr_update $repo
+
+        _vbr_prompt_files
+        _vbr_prompt_branch
+        _vbr_prompt_remote
     end
 
-    echo -ns (pwd | sed "s:^$HOME:~:") # Print pwd or full path
-
-    set -l git_working_tree (command git rev-parse --show-toplevel ^/dev/null)
-
-    # Show git branch an status
-    if [ $git_working_tree ]
-        _vibrant_update_git_last_pwd $git_working_tree
-        set -l git_info (_vibrant_git_info $git_working_tree)
-        if [ $git_info ]; echo -ns $blue ' ' $git_info $normal; end
-
-        set -l git_arrows (_vibrant_git_remote_info $git_working_tree)
-        if [ $git_arrows ]; echo -ns $yellow ' ' $git_arrows $normal; end
-    end
-
-    #echo -ns '          ' # Redraw tail of prompt on winch
-
-    set prompt_color $green
-    if [ $last_status != 0 ]; set prompt_color $red; end
-
-    # Terminate with a nice prompt char
-    echo -es $prompt_color ' ❯ ' $normal
+    if [ $_status != 0 ]; echo -es $red   ' ♦ ' $normal
+    else;                 echo -es $green ' ♦ ' $normal; end
 end
