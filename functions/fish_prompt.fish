@@ -56,6 +56,9 @@ function fish_prompt
         pushd $repo
 
         set -l branch (command git symbolic-ref HEAD ^/dev/null | sed -e 's|^refs/heads/||')
+        if [ -z $branch ]
+            set branch (command git rev-parse --short HEAD ^ /dev/null)
+        end
 
         set -l up 0
         set -l down 0
