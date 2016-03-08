@@ -176,20 +176,16 @@ function fish_prompt
     set -l white   (set_color white)
     set -l gray    (set_color 666)
 
-    set -l cwd $blue(pwd | sed "s:^$HOME:~:")
-
     # Output the prompt, left to right
 
     echo -e '' # Add a newline before new prompts
 
     # Display username and hostname if logged in as root, in sudo or ssh session
-    set -l uid (id -u)
-
-    if [ \( $uid -eq 0 -o $SUDO_USER \) -o $SSH_CONNECTION ]
-        echo -ns $white $USER $gray '@' (command hostname | command cut -f 1 -d '.') ' ' $normal
+    if [ \( (id -u) -eq 0 -o $SUDO_USER \) -o $SSH_CONNECTION ]
+        echo -ns $yellow $USER $gray '@' $cyan (command hostname | command cut -f 1 -d '.') ' ' $normal
     end
 
-    echo -ns $cwd $normal # Print pwd or full path
+    echo -ns (pwd | sed "s:^$HOME:~:") # Print pwd or full path
 
     # Print last command duration
     set -l cmd_duration (_vibrant_cmd_duration)
@@ -201,10 +197,10 @@ function fish_prompt
     if [ $git_working_tree ]
         _vibrant_update_git_last_pwd $git_working_tree
         set -l git_info (_vibrant_git_info $git_working_tree)
-        if [ $git_info ]; echo -ns $gray ' ' $git_info $normal; end
+        if [ $git_info ]; echo -ns $blue ' ' $git_info $normal; end
 
         set -l git_arrows (_vibrant_git_arrows $git_working_tree)
-        if [ $git_arrows ]; echo -ns $cyan ' ' $git_arrows $normal; end
+        if [ $git_arrows ]; echo -ns $red ' ' $git_arrows $normal; end
 
         _vibrant_async_git_fetch $git_working_tree
         if set -q _vibrant_async_git_fetch_running
@@ -212,12 +208,11 @@ function fish_prompt
         end
     end
 
-    echo -ns '          ' # Redraw tail of prompt on winch
+    #echo -ns '          ' # Redraw tail of prompt on winch
 
-    set prompt_color $magenta
+    set prompt_color $green
     if [ $last_status != 0 ]; set prompt_color $red; end
 
     # Terminate with a nice prompt char
-    echo -e ''
-    echo -ens $prompt_color '❯ ' $normal
+    echo -es $prompt_color ' ❯ ' $normal
 end
