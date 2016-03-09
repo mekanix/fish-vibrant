@@ -2,7 +2,7 @@
 
 > Pretty, minimal and fast [Fish](http://fishshell.com) prompt, inspired by [Pure](https://github.com/vkovtash/pure)
 
-![The Vibrant prompt in action](screenshot.png)
+[![the Vibrant prompt in action](https://asciinema.org/a/38749.png)](https://asciinema.org/a/38749)
 
 
 ## Installing
