@@ -11,7 +11,7 @@ function _vbr_fetch # <repo>
         set -g _vbr_timestamp $now
         set -g _vbr_pwd       $argv[1]
         pushd $argv[1]
-        git -c gc.auto=0 fetch > /dev/null ^ /dev/null &
+        fish -c 'git -c gc.auto=0 fetch > /dev/null ^ /dev/null' &
         popd
     end
 end
