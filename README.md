@@ -5,7 +5,9 @@
 [![the Vibrant prompt in action](https://asciinema.org/a/38749.png)](https://asciinema.org/a/38749)
 
 
-## Installing
+## Install
+
+With [Fisherman](https://github.com/fisherman/fisherman):
 
 `fisher install vibrant`
 
