@@ -90,8 +90,8 @@ function fish_prompt
 
 
         # Git – Unpulled & Unpushed Commits
-        if [ "$up" -gt 0 ];   set result $result "$yellow⇡$up$normal";    end
-        if [ "$down" -gt 0 ]; set result $result "$yellow⇣$down$normal";  end
+        if [ -n "$up"   -a "$up" -gt 0 ];   set result $result "$yellow⇡$up$normal";    end
+        if [ -n "$down" -a "$down" -gt 0 ]; set result $result "$yellow⇣$down$normal";  end
 
     end
 
