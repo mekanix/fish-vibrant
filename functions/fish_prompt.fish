@@ -7,7 +7,7 @@ function _vbr_fetch # <repo>
     set -l now (command date +%s)
     set -l elapsed (math $now - $_vbr_timestamp)
 
-    if test $_vbr_pwd != $argv[1] -o $elapsed -gt 600
+    if [ $_vbr_pwd != $argv[1] -o $elapsed -gt 600 ]
         set -g _vbr_timestamp $now
         set -g _vbr_pwd       $argv[1]
         pushd $argv[1]
@@ -33,17 +33,19 @@ function fish_prompt
     set -l white   (set_color white)
     set -l gray    (set_color 666)
 
+    set result ''
+
 
     # User Information
     # Display username and hostname if logged in as root, in sudo or ssh session
-    if test \( (id -u) -eq 0 -o $SUDO_USER \) -o $SSH_CONNECTION
+    if [ \( (id -u) -eq 0 -o $SUDO_USER \) -o $SSH_CONNECTION ]
         set -l host (command hostname | command cut -f 1 -d '.')
-        echo -ns $yellow $USER $gray '@' $cyan $host ' ' $normal
+        set result $result "$yellow$USER$gray@$cyan$host$normal"
     end
 
 
     # Path
-    echo -ns (pwd | sed "s:^$HOME:~:")
+    set result $result (pwd | sed "s:^$HOME:~:")
 
 
     # Git
@@ -62,7 +64,7 @@ function fish_prompt
 
         set -l up 0
         set -l down 0
-        if test (command git remote | wc -l | bc) -gt 0
+        if [ (command git remote | wc -l | bc) -gt 0 ]
             set up   (command git rev-list --left-only --count HEAD...@'{u}' ^/dev/null | bc)
             set down (command git rev-list --right-only --count HEAD...@'{u}' ^/dev/null | bc)
         end
@@ -78,25 +80,25 @@ function fish_prompt
         set unstaged  (echo $files | grep '^[^#][A-Z]' | wc -l | bc)
         set staged    (echo $files | grep '^[A-Z]'  | wc -l | bc)
 
-        if [ $untracked -gt 0 -o $unstaged -gt 0 -o $staged -gt 0 ]; echo -ns ' '; end
-        if test $untracked -gt 0; echo -ns $red    '*' $untracked $normal; end
-        if test $unstaged -gt 0;  echo -ns $red    '±' $unstaged $normal;  end
-        if test $staged -gt 0;    echo -ns $yellow '⇈' $staged $normal;    end
+        if [ $untracked -gt 0 ]; set result $result "$red*$untracked$normal"; end
+        if [ $unstaged -gt 0 ];  set result $result "$red±$unstaged$normal";  end
+        if [ $staged -gt 0 ];    set result $result "$yellow⇈$staged$normal"; end
 
 
         # Git – Branch
-        echo -ns $blue ' ' $branch $normal
+        set result $result "$blue$branch$normal"
 
 
         # Git – Unpulled & Unpushed Commits
-        if [ $up -gt 0 -o $down -gt 0 ]; echo -ns ' '; end
-        if [ $up -gt 0 ];   echo -ns $yellow '⇡' $up   $normal; end
-        if [ $down -gt 0 ]; echo -ns $red    '⇣' $down $normal; end
+        if [ "$up" -gt 0 ];   set result $result "$yellow⇡$up$normal";    end
+        if [ "$down" -gt 0 ]; set result $result "$yellow⇣$down$normal";  end
 
     end
 
 
     # Prompt Symbol
-    if [ $_status != 0 ]; echo -es $red   ' ♦ ' $normal
-    else;                 echo -es $green ' ♦ ' $normal; end
+    if [ $_status != 0 ]; set result $result "$red♦$normal"
+    else;                 set result $result "$green♦$normal"; end
+
+    echo $result ''
 end
