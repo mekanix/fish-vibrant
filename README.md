@@ -2,6 +2,8 @@
 
 > Pretty, minimal and fast [Fish](http://fishshell.com) prompt, inspired by [Pure](https://github.com/vkovtash/pure)
 
+![ISC-licensed](https://img.shields.io/github/license/derhuerst/vibrant.svg)
+
 [![the Vibrant prompt in action](https://asciinema.org/a/38749.png)](https://asciinema.org/a/38749)
 
 
