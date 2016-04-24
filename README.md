@@ -1,3 +1,5 @@
+[![Slack Room][slack-badge]][slack-link]
+
 # Vibrant
 
 > Pretty, minimal and fast [Fish](http://fishshell.com) prompt, inspired by [Pure](https://github.com/vkovtash/pure)
@@ -9,7 +11,7 @@
 
 ## Install
 
-With [Fisherman](https://github.com/fisherman/fisherman):
+With [fisherman]:
 
 ```shell
 fisher install derhuerst/vibrant
@@ -24,12 +26,6 @@ fisher install derhuerst/vibrant
 * Username and host only displayed when in an SSH or sudo session.
 * Shows the current path in the title.
 
-
-## License
-
-This prompt is licensed under the [MIT License](LICENSE).
-
-
-## Contributing
-
-If you **have a question**, **found a bug** or want to **propose a feature**, have a look at [the issues page](https://github.com/derhuerst/vibrant/issues).
+[slack-link]: https://fisherman-wharf.herokuapp.com
+[slack-badge]: https://fisherman-wharf.herokuapp.com/badge.svg
+[fisherman]: https://github.com/fisherman/fisherman
