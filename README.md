@@ -11,7 +11,9 @@
 
 With [Fisherman](https://github.com/fisherman/fisherman):
 
-`fisher install vibrant`
+```shell
+fisher install derhuerst/vibrant
+```
 
 
 ## Features
