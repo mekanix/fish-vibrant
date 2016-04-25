@@ -14,7 +14,7 @@
 With [fisherman]:
 
 ```shell
-fisher derhuerst/vibrant
+fisher vibrant
 ```
 
 
