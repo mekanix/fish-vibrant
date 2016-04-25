@@ -2,7 +2,7 @@
 
 # Vibrant
 
-> Pretty, minimal and fast [Fish](http://fishshell.com) prompt, inspired by [Pure](https://github.com/vkovtash/pure)
+> Pretty, minimal and fast [fish](http://fishshell.com) prompt, inspired by [Pure](https://github.com/vkovtash/pure)
 
 ![ISC-licensed](https://img.shields.io/github/license/derhuerst/vibrant.svg)
 
@@ -14,7 +14,7 @@
 With [fisherman]:
 
 ```shell
-fisher install derhuerst/vibrant
+fisher derhuerst/vibrant
 ```
 
 
