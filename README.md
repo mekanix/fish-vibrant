@@ -1,13 +1,10 @@
-[![Slack Room][slack-badge]][slack-link]
+![ISC-licensed](https://img.shields.io/github/license/derhuerst/vibrant.svg) [![Slack Room][slack-badge]][slack-link]
 
 # Vibrant
 
-> Pretty, minimal and fast [fish](http://fishshell.com) prompt, inspired by [Pure](https://github.com/vkovtash/pure)
-
-![ISC-licensed](https://img.shields.io/github/license/derhuerst/vibrant.svg)
+Pretty, minimal and fast prompt, inspired by [Pure](https://github.com/vkovtash/pure)
 
 [![the Vibrant prompt in action](https://asciinema.org/a/38749.png)](https://asciinema.org/a/38749)
-
 
 ## Install
 
@@ -16,7 +13,6 @@ With [fisherman]:
 ```shell
 fisher vibrant
 ```
-
 
 ## Features
 
