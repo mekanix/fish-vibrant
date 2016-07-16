@@ -1,104 +1,64 @@
-set -g _vbr_timestamp 0
-set -g _vbr_pwd       ''
+set __fish_git_prompt_color_branch blue
+
+set __fish_git_prompt_char_upstream_prefix ' '
+set __fish_git_prompt_char_stateseparator ' '
+
+set __fish_git_prompt_color_upstream_ahead yellow
+set __fish_git_prompt_char_upstream_ahead '↑'
+set __fish_git_prompt_color_upstream_behind yellow
+set __fish_git_prompt_char_upstream_behind '↓'
 
 
 
-function _vbr_fetch # <repo>
-	set -l now (command date +%s)
-	set -l elapsed (math $now - $_vbr_timestamp)
+set __fish_git_prompt_color_untrackedfiles red
+set __fish_git_prompt_char_untrackedfiles '*'
 
-	if [ $_vbr_pwd != $argv[1] -o $elapsed -gt 600 ]
-		set -g _vbr_timestamp $now
-		set -g _vbr_pwd       $argv[1]
-		pushd $argv[1]
-		fish -c 'git -c gc.auto=0 fetch > /dev/null ^ /dev/null' &
-		popd
-	end
-end
+set __fish_git_prompt_color_dirtystate red
+set __fish_git_prompt_char_dirtystate '±'
+
+set __fish_git_prompt_color_stagedstate yellow
+set __fish_git_prompt_char_stagedstate '⇈'
+
+set __fish_git_prompt_color_stagedstate yellow
+set __fish_git_prompt_char_stagedstate '⇈'
+
+set __fish_git_prompt_color_cleanstate 777
+set __fish_git_prompt_char_cleanstate '✔'
 
 
 
-# [user host] <path> [branch [files]] <prompt>
+set _vbr_cyan    (set_color cyan)
+set _vbr_yellow  (set_color yellow)
+set _vbr_red     (set_color red)
+set _vbr_blue    (set_color blue)
+set _vbr_green   (set_color green)
+set _vbr_gray    (set_color 777)
+
+
+
+# [user@host] path [branch [git status]] prompt
 function fish_prompt
-	set -l _status $status
+	set -l exit_code $status
 
-	# Colors
-	set -l cyan    (set_color cyan)
-	set -l yellow  (set_color yellow)
-	set -l red     (set_color red)
-	set -l blue    (set_color blue)
-	set -l green   (set_color green)
-	set -l normal  (set_color normal)
-	set -l magenta (set_color magenta)
-	set -l white   (set_color white)
-	set -l gray    (set_color 666)
+	set -l prompt ''
+	set -e prompt[1]
 
-	set result ''
-
-
-	# User Information
-	# Display username and hostname if logged in as root, in sudo or ssh session
+	# display username and hostname if logged in as root, in sudo or ssh session
 	if [ \( (id -u) -eq 0 -o $SUDO_USER \) -o $SSH_CONNECTION ]
-		set -l host (command hostname | command cut -f 1 -d '.')
-		set result $result "$yellow$USER$gray@$cyan$host$normal"
+		set -l host (hostname | cut -f 1 -d '.')
+		set prompt $prompt $_vbr_yellow$USER$_vbr_gray'@'$_vbr_cyan$host
 	end
 
-
-	# Path
-	set result $result (pwd | sed "s:^$HOME:~:")
-
+	# path
+	set prompt $prompt $_vbr_gray(pwd | sed "s:^$HOME:~:")
 
 	# Git
-	set -l repo (command git rev-parse --show-toplevel ^/dev/null)
-	if [ $repo ]
-		_vbr_fetch $repo
+	set prompt $prompt (__fish_git_prompt '%s')
 
-
-		# Git – Read Data
-		pushd $repo
-
-		set -l branch (command git symbolic-ref HEAD ^/dev/null | sed -e 's|^refs/heads/||')
-		if [ -z $branch ]
-			set branch (command git rev-parse --short HEAD ^ /dev/null)
-		end
-
-		set -l up 0
-		set -l down 0
-		if [ (command git remote | wc -l | bc) -gt 0 ]
-			set up   (command git rev-list --left-only --count HEAD...@'{u}' ^/dev/null | bc)
-			set down (command git rev-list --right-only --count HEAD...@'{u}' ^/dev/null | bc)
-		end
-
-		git status --porcelain --ignore-submodules -b 2> /dev/null | read -z files
-		#echo -e "   \n" | read -z files
-
-		popd
-
-
-		# Git – Untracked, Unstaged & Staged File
-		set untracked (echo $files | grep '^\?'     | wc -l | bc)
-		set unstaged  (echo $files | grep '^[^#][A-Z]' | wc -l | bc)
-		set staged    (echo $files | grep '^[A-Z]'  | wc -l | bc)
-
-		if [ $untracked -gt 0 ]; set result $result "$red*$untracked$normal"; end
-		if [ $unstaged -gt 0 ];  set result $result "$red±$unstaged$normal";  end
-		if [ $staged -gt 0 ];    set result $result "$yellow⇈$staged$normal"; end
-
-
-		# Git – Branch
-		set result $result "$blue$branch$normal"
-
-
-		# Git – Unpulled & Unpushed Commits
-		if [ -n "$up"   -a "$up" -gt 0 ];   set result $result "$yellow⇡$up$normal";    end
-		if [ -n "$down" -a "$down" -gt 0 ]; set result $result "$yellow⇣$down$normal";  end
-
+	# prompt symbol
+	if [ $exit_code != 0 ]; set prompt $prompt $_vbr_red'♦'
+	else;                   set prompt $prompt $_vbr_green'♦'
 	end
 
-
-	# Prompt Symbol
-	if [ $_status != 0 ]; set result $result "$red♦$normal"
-	else;                 set result $result "$green♦$normal"; end
-
-	echo $result ''
+	echo -n $prompt (set_color normal)
 end
