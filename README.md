@@ -4,7 +4,7 @@
 
 Pretty, minimal and fast prompt, inspired by [Pure](https://github.com/vkovtash/pure)
 
-[![the Vibrant prompt in action](https://asciinema.org/a/38749.png)](https://asciinema.org/a/38749)
+[![the Vibrant prompt in action](https://asciinema.org/a/80034.png)](https://asciinema.org/a/80034)
 
 ## Install
 
