@@ -21,9 +21,6 @@ set __fish_git_prompt_char_dirtystate '±'
 set __fish_git_prompt_color_stagedstate yellow
 set __fish_git_prompt_char_stagedstate '⇈'
 
-set __fish_git_prompt_color_stagedstate yellow
-set __fish_git_prompt_char_stagedstate '⇈'
-
 set __fish_git_prompt_showuntrackedfiles true
 set __fish_git_prompt_color_cleanstate 777
 set __fish_git_prompt_char_cleanstate '✔'

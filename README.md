@@ -16,11 +16,15 @@ fisher vibrant
 
 ## Features
 
-* Shows git branch and whether it's dirty (`*`).
-* Indicates when you have unpushed (`⇡`) or unpulled (`⇣`) git commits.
-* Prompt character turns red if the last command didn't exit with 0.
-* Username and host only displayed when in an SSH or sudo session.
-* Shows the current path in the title.
+- current path.
+- Git
+	- untracked files (`*`)
+	- dirty files (`±`)
+	- staged files (`⇈`)
+	- unpushed commits (`↑`)
+	- unpulled commits (`↓`)
+- prompt character turns red if last command failed
+- user and host only shown when root, sudo or in an SSH session
 
 [slack-link]: https://fisherman-wharf.herokuapp.com
 [slack-badge]: https://fisherman-wharf.herokuapp.com/badge.svg
