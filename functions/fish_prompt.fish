@@ -38,27 +38,27 @@ set _vbr_gray    (set_color 777)
 
 # [user@host] path [branch [git status]] prompt
 function fish_prompt
-	set -l exit_code $status
+  set -l exit_code $status
+  set prompt ''
 
-	set -l prompt ''
-	set -e prompt[1]
+  echo
+  if [ \( (id -u) -eq 0 -o $SUDO_USER \) -o $SSH_CONNECTION ]
+    set -l host (hostname | cut -f 1 -d '.')
+    set user_prompt $_vbr_yellow$USER$_vbr_gray'@'$_vbr_cyan$host
+    echo $user_prompt
+  end
 
-	# display username and hostname if logged in as root, in sudo or ssh session
-	if [ \( (id -u) -eq 0 -o $SUDO_USER \) -o $SSH_CONNECTION ]
-		set -l host (hostname | cut -f 1 -d '.')
-		set prompt $prompt $_vbr_yellow$USER$_vbr_gray'@'$_vbr_cyan$host
-	end
+  set git_prompt (__fish_git_prompt '%s')
+  if [ ! -z "$git_prompt" ]
+    echo $git_prompt
+  end
 
-	# path
-	set prompt $prompt $_vbr_gray(pwd | sed "s:^$HOME:~:")
+  if [ $exit_code != 0 ]
+    set symbol_prompt $prompt $_vbr_red'♦ '
+  else
+    set symbol_prompt $prompt $_vbr_green'♦ '
+  end
 
-	# Git
-	set prompt $prompt (__fish_git_prompt '%s')
-
-	# prompt symbol
-	if [ $exit_code != 0 ]; set prompt $prompt $_vbr_red'♦'
-	else;                   set prompt $prompt $_vbr_green'♦'
-	end
-
-	echo -n $prompt (set_color normal)
+  set path_prompt $_vbr_cyan(pwd | sed "s:^$HOME:~:")
+  echo $path_prompt $symbol_prompt
 end
