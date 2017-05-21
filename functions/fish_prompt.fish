@@ -54,11 +54,11 @@ function fish_prompt
   end
 
   if [ $exit_code != 0 ]
-    set symbol_prompt $prompt $_vbr_red'♦ '
+    set symbol_prompt $prompt $_vbr_red'♦'
   else
-    set symbol_prompt $prompt $_vbr_green'♦ '
+    set symbol_prompt $prompt $_vbr_green'♦'
   end
 
   set path_prompt $_vbr_cyan(pwd | sed "s:^$HOME:~:")
-  echo $path_prompt $symbol_prompt
+  echo $path_prompt $symbol_prompt(set_color normal) ''
 end
